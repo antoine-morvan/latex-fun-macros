@@ -1,0 +1,229 @@
+
+\usepackage[usenames,dvipsnames,table,xcdraw]{xcolor}
+\usepackage{pgfplots}
+\usepackage{setspace} 
+\usepackage{tikz}
+\usepackage{fp}
+\usepackage{xstring}
+\usepackage{siunitx}
+\usepackage{wallpaper}
+\usepackage{xintexpr}
+\usetikzlibrary{shadows}
+ 
+%% originaly used with babel french, which causes some issues
+%% wihout the following line
+\usetikzlibrary{babel}
+ 
+\makeatletter
+\newcommand*{\getlengthincm}[1]{\strip@pt\dimexpr0.035146\dimexpr#1\relax\relax}
+\makeatother
+ 
+\newcommand{\nume}[1]{\num[group-separator=\text{~},output-decimal-marker={,},group-digits=integer,group-minimum-digits=4]{#1}}
+
+%%
+%% #1 = list of titles and values (not percents)
+%%
+%%  example : 
+%%
+%%	\piechart{
+%%		(Very Low,37),
+%%		(Low,23),
+%%		(Average,34),
+%%		(High,5),
+%%		(Very High,1)
+%%	}
+%%
+\newcounter{totalPieChart}
+\newcommand{\piechart}[1]{
+	%compute total in order to compute percentages
+	\setcounter{totalPieChart}{0}
+	\xintForpair ##1##2 in{#1} \do {\addtocounter{totalPieChart}{##2}}
+	
+	%get the number of colors in the \colorCycleList
+	\pgfmathparse{int(dim(\colorCycleList)-1)}
+	\edef\cycleColorMax{\pgfmathresult}
+	
+	\begin{tikzpicture}[nodes = {font=\sffamily}, scale=1]
+		\def\angle{0}
+		\def\radius{3}
+		\newcount\cyclecount \cyclecount=-1
+		\newcount\ind \ind=-1
+		\xintForpair ##1##2 in{#1} \do {
+			\def\currentLoc{##2}
+			\def\name{##1}
+			\FPeval{\percent}{round(\currentLoc*100/\thetotalPieChart,2)}
+			\ifx\percent\empty\else               % If \percent is empty, do nothing
+				\global\advance\cyclecount by 1     % Advance cyclecount
+				\global\advance\ind by 1            % Advance list index
+				\ifnum\cycleColorMax<\cyclecount                 % If cyclecount is larger than list
+					\global\cyclecount=0              %   reset cyclecount and
+					\global\ind=0                     %   reset list index
+				\fi
+				\pgfmathparse{\colorCycleList[\the\ind]} % Get color from cycle list
+				\edef\color{\pgfmathresult}         %   and store as \color
+				% Draw angle and set labels
+				\draw[fill={\color!50},draw={\color!50!black!50}] (0,0) -- (\angle:\radius)
+				arc (\angle:\angle+\percent*3.6:\radius) -- cycle;
+				% do not print the percentage within the pie if the slice is too small
+				\ifnum5<\percent
+					\node at (\angle+0.5*\percent*3.6:0.7*\radius) {\percent\,\%};
+					\node[pin=\angle+0.5*\percent*3.6:\name] at (\angle+0.5*\percent*3.6:\radius) {};
+				\else
+					\node at (\angle+0.5*\percent*3.6:0.7*\radius) {};
+					\node[pin=\angle+0.5*\percent*3.6:\name~(\percent\,\%)] at (\angle+0.5*\percent*3.6:\radius) {};
+				\fi
+				%at (\angle+0.5*\percent*3.6:{\radius+1.3}) {\percent\%};
+				\pgfmathparse{\angle+\percent*3.6}  % Advance angle
+				\xdef\angle{\pgfmathresult}         %   and store in \angle
+			\fi
+		};
+	\end{tikzpicture}
+}
+
+
+%%
+%% #1 = radius (4cm is good)
+%% #2 = radius for labels (3.5cm)
+%% #3 = score baseline (blue line)
+%% #4 = list of titles and values
+%%
+%% example 
+%%  
+%%  \spiderweb{4,5cm}{3,5cm}{70}{
+%%	  Sécurité/10,
+%%	  Maintenabilité/30,
+%%	  Fiabilité/50,
+%%	  Portabilité/70,
+%%	  Performance/90
+%%	}
+%%
+\newcommand{\spiderweb}[4]{
+ 
+	\newcount\numberOfDimensionsForSpiderWebCounter \numberOfDimensionsForSpiderWebCounter=0
+	\foreach \Title/\Score in {#4} {
+		\global\advance\numberOfDimensionsForSpiderWebCounter by 1     % Advance cyclecount
+	}
+ 
+	\def\numberOfDimensionsForSpiderWeb{\the\numberOfDimensionsForSpiderWebCounter} % number of dimensions (config option)
+	\def\numberOfScaleUnits{100} % number of scale units (config option)
+	\def\calculatedAngleBetweenDimAxes{360/\numberOfDimensionsForSpiderWeb} % calculated angle between dimension axes
+ 
+	\newdimen\R % maximal diagram radius (config option)
+	\newdimen\L % radius to put dimension labels (config option)
+ 
+	\L=#1
+	\R=#2
+ 
+	\begin{tikzpicture}[nodes = {font=\sffamily}, scale=1]
+	\path (0:0cm) coordinate (O); % define coordinate for origin
+	% draw the spiderweb
+	\foreach \Title/\Value[count=\X] in {#4} {
+		\draw (\X*\calculatedAngleBetweenDimAxes+90:0) -- (\X*\calculatedAngleBetweenDimAxes+90:\R);
+		\node[pin=\X*\calculatedAngleBetweenDimAxes+90:{\Title}] at (\X*\calculatedAngleBetweenDimAxes+90:\R) {};
+	}
+	\foreach \Y in {0,...,10}{
+		\draw [opacity=0.3] (90:\Y*\R*10/\numberOfScaleUnits) 
+		\foreach \X in {1,...,\numberOfDimensionsForSpiderWeb}{
+			-- (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R*10/\numberOfScaleUnits)
+		} -- cycle;
+	}
+	% create paths
+	\foreach \Y in {0,...,\numberOfScaleUnits}{
+		\foreach \X in {1,...,\numberOfDimensionsForSpiderWeb}{
+			\path (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R/\numberOfScaleUnits) coordinate (D\X-\Y);
+			\fill (D\X-\Y) circle (1pt);
+		}
+	}
+ 
+	\newcount\cyclecountDeux \cyclecountDeux=0
+	\foreach \Title/\Score in {#4} {
+		\global\advance\cyclecountDeux by 1     % Advance cyclecount
+		\def\X{\the\cyclecountDeux}
+		\def\Y{\Score}
+		\path (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R/\numberOfScaleUnits) coordinate (S\X);
+		\fill (S\X) circle (1pt);
+	}
+ 
+	\newcount\cyclecount \cyclecount=1
+	\foreach \Title/\Score in {#4} {
+		\global\advance\cyclecount by 1     % Advance cyclecount
+		\ifnum\numberOfDimensionsForSpiderWebCounter<\cyclecount
+		\global\cyclecount=1
+		\fi
+ 
+		\newcount\nextcyclecount \nextcyclecount=\the\cyclecount;
+		\global\advance\nextcyclecount by 1 
+		\ifnum\numberOfDimensionsForSpiderWebCounter<\nextcyclecount
+		\global\nextcyclecount=1
+		\fi
+		\draw  [color=blue,line width=4pt,opacity=0.5] (D\the\cyclecount-#3) -- (D\the\nextcyclecount-#3);
+		\draw  [color=red,line width=4pt,opacity=0.5] (S\the\cyclecount) -- (S\the\nextcyclecount);
+ 
+	}
+ 
+	\end{tikzpicture}
+}
+
+%%
+%% #1 = label width
+%% #2 = list of titles and values
+%%
+%% example:
+%%
+%%	\barchart{6cm}{
+%%		apples/2047,
+%%		pears/1244,
+%%		banana/1208,
+%%		{a fruit name with slashes / well / ...}/1055,
+%%		{a fruit name}/9009
+%%	}
+%%
+\newcommand{\barchart}[2]{
+	%% reorder list (thanks \foreach...)
+	\foreach  \l/\x[count=\y] in {#2} {
+		\ifthenelse{\equal{\y}{1}}{
+			\xdef\orderedList{{\l}/\x}
+		}{
+			\xdef\orderedList{{\l}/\x, \orderedList}
+		}
+	}
+ 
+	%% compute bar length to adjust to textwidth
+	\newdimen\barlength
+	\setlength{\barlength}{\textwidth}
+	\addtolength{\barlength}{-#1}
+	\addtolength{\barlength}{-2cm}
+ 
+	\def\maxval{0} %% stores the maximum value of input data
+	\newcount\barcount \barcount=0
+	\foreach  \l/\x[count=\y] in \orderedList {
+		\global\edef\maxval{\xinttheiiexpr max(\x,\maxval)\relax}
+		\global\advance\barcount by 1
+	}
+	\edef\maxval{\xintthefloatexpr (\maxval*110)/100\relax} %% add 10% to the max value for dimensionning the graph
+ 
+	\def\xstep{\xinttheiexpr [10] \getlengthincm{\barlength}/\maxval \relax} %% compute the x steps
+ 
+	{ %% add group to avoid spreading stretch value
+		\setstretch{0.6}
+		\begin{tikzpicture}[x={(\xstep,0)}]
+			\foreach  \l/\x[count=\y] in \orderedList { 
+				%% \l = label name
+				%% \x = input data
+				\node[left] at (0,\y) {
+					%% surround the data within a tabular
+					\begin{tabular}{>{
+							%\columncolor{white}
+							\raggedleft\arraybackslash}p{#1}} \small \l \end{tabular}
+				};
+				%% draw bar
+				\filldraw[blue!50, draw=blue!50!black] (0,\y-.3) rectangle (\x,\y+.3);
+				%% draw value as a node
+				\node[right] at (\x, \y) {\small\nume{\x}};
+			}
+			%% draw axis bar
+			\draw (0,0.5) -- (0,\xintthefloatexpr{\the\barcount + 0.5}\relax);
+ 
+		\end{tikzpicture}
+	}
+}

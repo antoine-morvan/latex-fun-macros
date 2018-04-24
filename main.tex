@@ -1,0 +1,33 @@
+
+\documentclass{standalone}
+
+\usepackage{graphs}
+ 
+\begin{document}
+
+\barchart{4cm}{
+   TITI/25000,
+   TATA/15000,
+   TUTU/3900
+}
+
+\spiderweb %% 0 to 100 grid
+   {4,5cm} %% radius for labels
+   {3,5cm} %% radius for spiderweb
+   {70} %% baseline score
+   { %% data (label/score)
+     Fifty/10,
+     Sixty/20,
+     Seventy/50
+   }%%spiderweb
+
+\def\colorCycleList{{"blue","red","yellow","green", "orange", "gray" }}
+\piechart{
+   (Very Low,37),
+   (Low,23),
+   (Average,34),
+   (High,5),
+   (Very High,1)
+}%%piechart
+
+\end{document}

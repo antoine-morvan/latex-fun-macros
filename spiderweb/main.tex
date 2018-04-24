@@ -1,111 +1,16 @@
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-%
-% Welcome to Overleaf --- just edit your LaTeX on the left,
-% and we'll compile it for you on the right. If you give
-% someone the link to this page, they can edit at the same
-% time. See the help menu above for more info. Enjoy!
-%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
 \documentclass{standalone}
- 
-\usepackage{tikz}
-\usepackage{pgfplots}
- 
-%% originaly used with babel french, which causes some issues
-%% wihout the following line
-\usetikzlibrary{babel}
- 
-%%
-%% #1 = radius (4cm is good)
-%% #2 = radius for labels (3.5cm)
-%% #3 = score baseline (blue line)
-%% #4 = list of titles and values
-%%
-%% example 
-%%  
-%%  \spiderweb{4,5cm}{3,5cm}{70}{
-%%	  Sécurité/10,
-%%	  Maintenabilité/30,
-%%	  Fiabilité/50,
-%%	  Portabilité/70,
-%%	  Performance/90
-%%	}
-%%
-\newcommand{\spiderweb}[4]{
- 
-	\newcount\numberOfDimensionsForSpiderWebCounter \numberOfDimensionsForSpiderWebCounter=0
-	\foreach \Title/\Score in {#4} {
-		\global\advance\numberOfDimensionsForSpiderWebCounter by 1     % Advance cyclecount
-	}
- 
-	\def\numberOfDimensionsForSpiderWeb{\the\numberOfDimensionsForSpiderWebCounter} % number of dimensions (config option)
-	\def\numberOfScaleUnits{100} % number of scale units (config option)
-	\def\calculatedAngleBetweenDimAxes{360/\numberOfDimensionsForSpiderWeb} % calculated angle between dimension axes
- 
-	\newdimen\R % maximal diagram radius (config option)
-	\newdimen\L % radius to put dimension labels (config option)
- 
-	\L=#1
-	\R=#2
- 
-	\begin{tikzpicture}[nodes = {font=\sffamily}, scale=1]
-	\path (0:0cm) coordinate (O); % define coordinate for origin
-	% draw the spiderweb
-	\foreach \Title/\Value[count=\X] in {#4} {
-		\draw (\X*\calculatedAngleBetweenDimAxes+90:0) -- (\X*\calculatedAngleBetweenDimAxes+90:\R);
-		\node[pin=\X*\calculatedAngleBetweenDimAxes+90:{\Title}] at (\X*\calculatedAngleBetweenDimAxes+90:\R) {};
-	}
-	\foreach \Y in {0,...,10}{
-		\draw [opacity=0.3] (90:\Y*\R*10/\numberOfScaleUnits) 
-		\foreach \X in {1,...,\numberOfDimensionsForSpiderWeb}{
-			-- (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R*10/\numberOfScaleUnits)
-		} -- cycle;
-	}
-	% create paths
-	\foreach \Y in {0,...,\numberOfScaleUnits}{
-		\foreach \X in {1,...,\numberOfDimensionsForSpiderWeb}{
-			\path (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R/\numberOfScaleUnits) coordinate (D\X-\Y);
-			\fill (D\X-\Y) circle (1pt);
-		}
-	}
- 
-	\newcount\cyclecountDeux \cyclecountDeux=0
-	\foreach \Title/\Score in {#4} {
-		\global\advance\cyclecountDeux by 1     % Advance cyclecount
-		\def\X{\the\cyclecountDeux}
-		\def\Y{\Score}
-		\path (\X*\calculatedAngleBetweenDimAxes+90:\Y*\R/\numberOfScaleUnits) coordinate (S\X);
-		\fill (S\X) circle (1pt);
-	}
- 
-	\newcount\cyclecount \cyclecount=1
-	\foreach \Title/\Score in {#4} {
-		\global\advance\cyclecount by 1     % Advance cyclecount
-		\ifnum\numberOfDimensionsForSpiderWebCounter<\cyclecount
-		\global\cyclecount=1
-		\fi
- 
-		\newcount\nextcyclecount \nextcyclecount=\the\cyclecount;
-		\global\advance\nextcyclecount by 1 
-		\ifnum\numberOfDimensionsForSpiderWebCounter<\nextcyclecount
-		\global\nextcyclecount=1
-		\fi
-		\draw  [color=blue,line width=4pt,opacity=0.5] (D\the\cyclecount-#3) -- (D\the\nextcyclecount-#3);
-		\draw  [color=red,line width=4pt,opacity=0.5] (S\the\cyclecount) -- (S\the\nextcyclecount);
- 
-	}
- 
-	\end{tikzpicture}
-}
- 
+
+\usepackage{../graphs}
+
 \begin{document}
- 
+
 \spiderweb{4,5cm}{3,5cm}{70}{
 	Chaos/10,
 	Order/30,
 	Neutral/50
 }
- 
+
 \spiderweb{4,5cm}{3,5cm}{70}{
 	Security/10,
 	Maintenability/30,
@@ -113,8 +18,7 @@
 	Portability/70,
 	Efficiency/10
 }
- 
- 
+
 \spiderweb{4,5cm}{3,5cm}{70}{
 	Security/10,
 	Maintenability/30,
@@ -134,5 +38,5 @@
 	Portability/70,
 	Efficiency/10
 }
- 
+
 \end{document}
