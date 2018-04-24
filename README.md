@@ -6,7 +6,7 @@ Originaly posted here : https://latex.org/forum/viewtopic.php?f=45&t=28502
 
 ## Usage
 
-'''
+```
 \usepackage{graphs}
 
 %...
@@ -38,7 +38,7 @@ Originaly posted here : https://latex.org/forum/viewtopic.php?f=45&t=28502
    (High,5),
    (Very High,1)
 }%%piechart
-'''
+```
 
 ## Sample ouput
 
